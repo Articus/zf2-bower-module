@@ -22,6 +22,18 @@ class Pack extends AbstractOptions
 	protected $modules;
 
 	/**
+	 * Predefined value for "$type" parameter for BowerModule\View\Helper\Bower
+	 * @var string
+	 */
+	protected $type = 'text/javascript';
+
+	/**
+	 * Predefined value for "$attrs" parameter for BowerModule\View\Helper\Bower
+	 * @var array
+	 */
+	protected $attributes = [];
+
+	/**
 	 * @param string $token
 	 */
 	public function setToken($token)
@@ -53,4 +65,35 @@ class Pack extends AbstractOptions
 		return $this->modules;
 	}
 
+	/**
+	 * @return string
+	 */
+	public function getType()
+	{
+		return $this->type;
+	}
+
+	/**
+	 * @param string $type
+	 */
+	public function setType($type)
+	{
+		$this->type = $type;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getAttributes()
+	{
+		return $this->attributes;
+	}
+
+	/**
+	 * @param array $attributes
+	 */
+	public function setAttributes($attributes)
+	{
+		$this->attributes = $attributes;
+	}
 }

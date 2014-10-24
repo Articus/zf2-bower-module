@@ -30,92 +30,104 @@ class Bower extends AbstractHelper implements ServiceLocatorAwareInterface
 	 * @param string $packName - pack defined in configuration
 	 * @param string $containerName - script view helper that should be used to insert files
 	 * @param string|number $place - placement for files in view helper either PLACE_APPEND or PLACE_PREPEND or offset index
+	 * @param string $type - "$type" parameter for script view helper
+	 * @param array $attrs - "$attrs" parameters for script view helper
+	 * @return self
 	 */
-	public function __invoke($packName, $containerName = self::CONTAINER_INLINE, $place = self::PLACE_APPEND)
+	public function __invoke(
+		$packName,
+		$containerName = self::CONTAINER_INLINE,
+		$place = self::PLACE_APPEND,
+		$type = null,
+		$attrs = null
+	)
 	{
 		$container = $this->getScriptContainer($containerName);
-		$jsFiles = $this->getJSFiles($packName);
-
-		$insert = null;
-		switch ($place)
-		{
-			case self::PLACE_APPEND:
-				$insert = function($jsFile) use ($container)
-				{
-					$container->appendFile($jsFile);
-				};
-				break;
-			case self::PLACE_PREPEND:
-				$insert = function($jsFile) use ($container)
-				{
-					$container->prependFile($jsFile);
-				};
-				break;
-			default:
-				if (is_numeric($place))
-				{
-					$insert = function($jsFile) use ($container, &$place)
-					{
-						$container->offsetSetFile($place, $jsFile);
-						$place++;
-					};
-				}
-				break;
-		}
-		if (is_callable($insert))
-		{
-			foreach ($jsFiles as $jsFile)
-			{
-				$insert($jsFile);
-			}
-		}
-		else
-		{
-			throw new \RuntimeException('Failed to insert JS files.');
-		}
-		return $this;
-	}
-
-	/**
-	 * Return list of paths to all JS-files required to use specified pack sorted in the order they should be loaded.
-	 * @param string $packName
-	 * @return string[]
-	 */
-	protected function getJSFiles($packName)
-	{
-		$result = [];
+		$injector = $this->getInjector($container, $place);
 
 		$config = $this->getConfig();
-		$bower = $this->getBower();
 		$pathBuilder = $this->getPathBuilder();
 
 		$packs = $config->getPacks();
 		if (isset($packs[$packName]))
 		{
 			$pack = $packs[$packName];
-			$pathModifier = function($path) use ($pack)
+			$insert = function($path) use ($injector, $pack, $type, $attrs)
 			{
+				//Add token to path
 				$token = $pack->getToken();
 				if (!empty($token))
 				{
 					$path .= '?t='.$token;
 				}
-				return $path;
+				//Default value for type
+				if (is_null($type))
+				{
+					$type = $pack->getType();
+				}
+				//Default value for attrs
+				if (is_null($attrs))
+				{
+					$attrs = $pack->getAttributes();
+				}
+				$injector($path, $type, $attrs);
 			};
 			if ($config->getDebugMode())
 			{
+				$bower = $this->getBower();
 				$modules = $bower->findDependencies($pack->getModules());
 				foreach ($modules as $moduleName)
 				{
-					$result[] = $pathModifier($pathBuilder->getDebugWebPath($moduleName));
+					$insert($pathBuilder->getDebugWebPath($moduleName));
 				}
 			}
 			else
 			{
-				$result[] = $pathModifier($pathBuilder->getPackWebPath($packName));
+				$insert($pathBuilder->getPackWebPath($packName));
 			}
 		}
-		return $result;
+
+		return $this;
+	}
+
+	/**
+	 * @param ScriptContainer $container
+	 * @param string|number $place
+	 * @return callable
+	 */
+	protected function getInjector($container, $place)
+	{
+		$insert = null;
+		switch ($place)
+		{
+			case self::PLACE_APPEND:
+				$insert = function($jsFile, $type, $attrs) use ($container)
+				{
+					$container->appendFile($jsFile, $type, $attrs);
+				};
+				break;
+			case self::PLACE_PREPEND:
+				$insert = function($jsFile, $type, $attrs) use ($container)
+				{
+					$container->prependFile($jsFile, $type, $attrs);
+				};
+				break;
+			default:
+				if (is_numeric($place))
+				{
+					$insert = function($jsFile, $type, $attrs) use ($container, &$place)
+					{
+						$container->offsetSetFile($place, $jsFile, $type, $attrs);
+						$place++;
+					};
+				}
+				break;
+		}
+		if (!is_callable($insert))
+		{
+			throw new \RuntimeException('Failed to make JS files injector.');
+		}
+		return $insert;
 	}
 
 	/**

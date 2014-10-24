@@ -28,6 +28,8 @@ which you want to have in both combined (for deploying) and separated (for debug
 * `bower.debug_folder.web` - web path to access all debug package files
 * `bower.packs.<pack name>.modules` - Bower packages names to form a pack
 * `bower.packs.<pack name>.token` - string that will be appended to file path of the pack (to force browser to reload)
+* `bower.packs.<pack name>.type` - predefined value for "$type" parameter for script view helper
+* `bower.packs.<pack name>.attributes` - predefined value for "$attrs" parameter for script view helper
 * `bower.debug_mode` - flag that determines if you are currently debugging your app and want each pack content in separate files  
 
 Most configuration options have default values (check `config/module.config.php` for details), so the only thing 
@@ -40,17 +42,23 @@ you have to declare in your ZF2 app config is something like this (sample is in 
           token: 'f22f0d9703c2ef8dc9cc14f6286ee302'
           modules:
             - jquery-form
-            - jquery.mousewheel
+            - jquery-mousewheel
             - jquery.jscrollpane
             - angular
             - angular-animate
             - angular-messages
             - angular-ui-router
         admin:
+          type: 'application/javascript'
           modules:
             - jquery
             - angular
             - bootstrap
+        polyfill:
+          attributes:
+            conditional: '[if IE 9]'
+          modules:
+            - html5shiv
 
 Beware of hidden dependencies between packages: module does its best to detect package dependencies
 from `bower.json` files but some of them are not declared there (like between `jquery.mousewheel` and `jquery.scrollpane`).
