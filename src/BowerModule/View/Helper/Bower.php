@@ -76,6 +76,9 @@ class Bower extends AbstractHelper implements ServiceLocatorAwareInterface
 			{
 				$bower = $this->getBower();
 				$modules = $bower->findDependencies($pack->getModules());
+				if($place == self::PLACE_PREPEND){
+					$modules = array_reverse($modules);
+				}
 				foreach ($modules as $moduleName)
 				{
 					$insert($pathBuilder->getDebugWebPath($moduleName));
