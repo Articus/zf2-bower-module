@@ -197,14 +197,18 @@ class Service implements ServiceLocatorAwareInterface
 
 	/**
 	 * Returns path to bower.json for specified module
+	 * If usePackageJson option is set to true and bower.json is not readable, returns path to package.json
 	 * @param string $module
 	 * @return string
 	 */
 	public function getModuleBowerConfigFilePath($module)
 	{
 		$path = $this->getPathBuilder()->getOsPath($this->getBowerFolder(), $module, 'bower.json');
-		if(!file_exists($path) && $this->getConfig()->getUsePackageJson()){
+		if(!is_readable($path) && $this->getConfig()->getUsePackageJson()){
 			$path = $this->getPathBuilder()->getOsPath($this->getBowerFolder(), $module, 'package.json');
+		}
+		if(!is_readable($path)){
+			throw new \RuntimeException('Failed to access configuration for "'.$module.'".');
 		}
 		return $path;
 	}
@@ -218,10 +222,6 @@ class Service implements ServiceLocatorAwareInterface
 	{
 		//TODO add caching
 		$filePath = $this->getModuleBowerConfigFilePath($module);
-		if (!is_readable($filePath))
-		{
-			throw new \RuntimeException('Failed to access configuration for "'.$module.'".');
-		}
 		$config = file_get_contents($filePath);
 		if ($config === false)
 		{
