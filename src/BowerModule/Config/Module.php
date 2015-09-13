@@ -38,7 +38,12 @@ class Module extends AbstractOptions
 	 * @var bool
 	 */
 	protected $debugMode;
-
+	/**
+	 * Set to true if you want to scan for package.json file in addition to bower.json
+	 * @var bool
+	 */
+	protected $usePackageJson = false;
+	
 	/**
 	 * @param array|Folder $bowerFolder
 	 */
@@ -153,5 +158,13 @@ class Module extends AbstractOptions
 	public function getDebugMode()
 	{
 		return (bool) $this->debugMode;
+	}
+	
+	public function getUsePackageJson() {
+		return (bool) $this->usePackageJson;
+	}
+
+	public function setUsePackageJson($usePackageJson) {
+		$this->usePackageJson = $usePackageJson;
 	}
 }

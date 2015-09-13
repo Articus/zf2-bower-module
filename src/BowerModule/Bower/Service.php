@@ -203,8 +203,9 @@ class Service implements ServiceLocatorAwareInterface
 	public function getModuleBowerConfigFilePath($module)
 	{
 		$path = $this->getPathBuilder()->getOsPath($this->getBowerFolder(), $module, 'bower.json');
-		if(!file_exists($path))
+		if(!file_exists($path) && $this->getConfig()->getUsePackageJson()){
 			$path = $this->getPathBuilder()->getOsPath($this->getBowerFolder(), $module, 'package.json');
+		}
 		return $path;
 	}
 
